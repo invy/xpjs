@@ -6,16 +6,16 @@ set (xpjs_VERSION_MINOR 1)
 
 
 
-# set XPlane SDK Directory
+# set XPlane SDK Directory, spidermonkey and jsrdbg paths
 set(XPSDKDIR ../SDK)
 set(MOZJSDIR_INC /usr/include/mozjs-24)
 set(JSRDBGDIR_INC jsrdbg/public)
 set(JSRDBGDIR_LIB jsrdbg/inst/lib)
 
 # compiles options
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wextra -std=c++11 -Wall -O2 -fPIC")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -std=c++11 -Wall -O2 -fPIC")
 
-#Bring the headers, such as Student.h into the project
+# Bring the headers
 include_directories(inc)
 foreach (dir Widgets Wrappers XPLM)
   include_directories ("${XPSDKDIR}/CHeaders/${dir}")
@@ -37,11 +37,10 @@ file(GLOB INCLUDES "inc/*.h")
 
 set(ALL_SRC ${SOURCES} ${INCLUDES})
 LIST(SORT ALL_SRC)
-
 SOURCE_GROUP(src FILES ${ALL_SRC})
 
 # executable
-add_library(xpjs SHARED ${ALL_SRC})
+add_library(xpjs SHARED ${SOURCES})
 
 
 target_link_libraries (xpjs dl pthread mozjs-24 libjsrdbg.a)
