@@ -1,5 +1,6 @@
 #include <fstream>
 #include <string>
+#include <sstream>
 #include <iterator>
 
 #include <jsapi.h>
@@ -122,16 +123,20 @@ bool JSEngine::setup(const std::string scriptPath) {
     return true;
 }
 
-void JSEngine::onError(const std::string& error) {
-    XPLMDebugString(("XPJS: " + error + "\n").c_str());
+void JSEngine::onError(const std::string& message, JSErrorReport *report) {
+    std::stringstream ss;
+    ss << "XPJS: [" << report->errorNumber << "] " << report->filename << ": "
+                    << report->lineno << ":" << report->column << "\n\t" << message << "\n"
+                    << "\t\t" << "at:\t" << report->tokenptr << "\n";
+    XPLMDebugString(ss.str().c_str());
 }
 
-void JSEngine::dispatchError(JSContext* ctx, const char* message, JSErrorReport*) {
+void JSEngine::dispatchError(JSContext* ctx, const char* message, JSErrorReport* report) {
     auto rt = JS_GetRuntime(ctx);
     auto rt_userdata = JS_GetRuntimePrivate(rt);
     if (rt_userdata) {
         auto req = static_cast<JSEngine*>(rt_userdata);
-        req->onError(message);
+        req->onError(message, report);
     }
 }
 

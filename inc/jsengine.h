@@ -62,7 +62,7 @@ public:
     ~JSEngine();
     bool setup(const std::string scriptPath);
     void update();
-    void onError(const std::string& error);
+    void onError(const std::string& error, JSErrorReport *report);
     static void dispatchError(JSContext* ctx, const char* message, JSErrorReport*);
 };
 
