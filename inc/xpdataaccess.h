@@ -61,11 +61,11 @@ public:
 
 
     void set(const float &data) {
-        if(!isnan(data))
+        if(!std::isnan(data))
             XPLMSetDataf(ref, data);
     }
     void set(const double &data) {
-        if(!isnan(data))
+        if(!std::isnan(data))
             XPLMSetDatad(ref, data);
     }
     void set(std::vector<int> &data) {
@@ -81,7 +81,7 @@ public:
         XPLMSetDatavi(ref, &data, off, 1);
     }
     void setAt(float data, const size_t off) {
-        if(!isnan(data))
+        if(!std::isnan(data))
             XPLMSetDatavf(ref, &data, off, 1);
     }
 
