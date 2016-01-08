@@ -61,7 +61,9 @@ public:
     JSEngine();
     ~JSEngine();
     bool setup(const std::string scriptPath);
-    void update();
+    void callJsUpdate();
+    void callJsOnEnable();
+    void callJsOnDisable();
     void onError(const std::string& error, JSErrorReport *report);
     static void dispatchError(JSContext* ctx, const char* message, JSErrorReport*);
 };

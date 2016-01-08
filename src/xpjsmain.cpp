@@ -36,7 +36,7 @@ static float updateAvionics(float elapsedSinceLastCall,
                  float elapsedTimeSinceLastFlightLoop,  int counter,
                  void *refcon)
 {
-    g_js->update();
+    g_js->callJsUpdate();
     return -1.0f;
 }
 
@@ -63,6 +63,7 @@ PLUGIN_API int XPluginEnable(void)
         delete ::g_js;
         return false;
     }
+    g_js->callJsOnEnable();
     XPLMRegisterFlightLoopCallback ((XPLMFlightLoop_f)updateAvionics, -1.0, nullptr);
     return true;
 }
@@ -70,6 +71,8 @@ PLUGIN_API int XPluginEnable(void)
 PLUGIN_API void XPluginDisable(void)
 {
     XPLMUnregisterFlightLoopCallback(updateAvionics, nullptr);
+    g_js->callJsOnDisable();
+
     if(::g_js)
         delete ::g_js;
 }

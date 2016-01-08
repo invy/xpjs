@@ -82,12 +82,28 @@ JSEngine::~JSEngine() {
     JS_ShutDown();
 }
 
-void JSEngine::update() {
+void JSEngine::callJsUpdate() {
     JS::RootedValue rval(cx);
     JS::AutoValueVector argv(cx);
     argv.resize(0);
     JS_CallFunctionName(this->cx, *(this->global), "update", 0, argv.begin(), rval.address());
 }
+
+void JSEngine::callJsOnEnable() {
+    JS::RootedValue rval(cx);
+    JS::AutoValueVector argv(cx);
+    argv.resize(0);
+    JS_CallFunctionName(this->cx, *(this->global), "onEnable", 0, argv.begin(), rval.address());
+}
+
+void JSEngine::callJsOnDisable() {
+    JS::RootedValue rval(cx);
+    JS::AutoValueVector argv(cx);
+    argv.resize(0);
+    JS_CallFunctionName(this->cx, *(this->global), "onDisable", 0, argv.begin(), rval.address());
+}
+
+
 
 bool JSEngine::setup(const std::string scriptPath) {
 
