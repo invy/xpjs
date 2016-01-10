@@ -7,7 +7,8 @@
 #include <jsdbgapi.h>
 
 
-#include "XPLMUtilities.h"
+#include <XPLMUtilities.h>
+#include <XPLMProcessing.h>
 #include "jsfuncwrapper.h"
 #include "jsengine.h"
 
@@ -158,4 +159,15 @@ void JSEngine::dispatchError(JSContext* ctx, const char* message, JSErrorReport*
 
 std::string& JSEngine::getScript() {
     return this->scriptContent;
+}
+
+FlightLoopCallbackObject* JSEngine::addJSFlightLoopCallback(const std::string &callbackName) {
+    callbacks.push_back(FlightLoopCallbackObject(callbackName, this->cx, this->global));
+    return &callbacks.back();
+}
+
+void JSEngine::unregisterAllCallbacks() {
+    for(auto c : callbacks) {
+        XPLMUnregisterFlightLoopCallback((XPLMFlightLoop_f)&(c.callback), nullptr);
+    }
 }

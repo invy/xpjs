@@ -4,11 +4,14 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <jsapi.h>
 #include <jsdbgapi.h>
 
 #include "jsrdbg.h"
+
+#include "xpcallbacks.h"
 
 static JSClass global_class = {
     "global",
@@ -22,6 +25,7 @@ static JSClass global_class = {
     JS_ConvertStub,
 };
 
+class FlightLoopCallbackObject;
 
 class JSEngine
 {
@@ -54,7 +58,8 @@ private:
     std::string scriptFileName;
     std::string scriptContent;
     ScriptLoader loader;
-
+public:
+    std::vector<FlightLoopCallbackObject> callbacks;
 public:
     bool InitDebugger();
     std::string& getScript();
@@ -65,6 +70,8 @@ public:
     void callJsOnEnable();
     void callJsOnDisable();
     void onError(const std::string& error, JSErrorReport *report);
+    FlightLoopCallbackObject* addJSFlightLoopCallback(const std::string &callbackName);
+    void unregisterAllCallbacks();
     static void dispatchError(JSContext* ctx, const char* message, JSErrorReport*);
 };
 
