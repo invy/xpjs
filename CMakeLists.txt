@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.11)
+cmake_minimum_required(VERSION 3.0)
 
 project(xpjs CXX)
 set (xpjs_VERSION_MAJOS 0)
@@ -9,8 +9,11 @@ set (xpjs_VERSION_MINOR 1)
 # set XPlane SDK Directory, spidermonkey and jsrdbg paths
 set(XPSDKDIR ../SDK)
 set(MOZJSDIR_INC /usr/include/mozjs-24)
-set(JSRDBGDIR_INC jsrdbg/public)
-set(JSRDBGDIR_LIB jsrdbg/inst/lib)
+set(JSRDBGDIR_INC ../xpjs-libs/jsrdbg/public)
+set(JSRDBGDIR_LIB ../xpjs-libs/jsrdbg/inst/lib)
+set(XPJS_OS lin)
+set(INSTALL_DIR ${CMAKE_INSTALL_PREFIX})
+
 
 # compiles options
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -std=c++11 -Wall -O2 -fPIC")
@@ -40,10 +43,18 @@ LIST(SORT ALL_SRC)
 SOURCE_GROUP(src FILES ${ALL_SRC})
 
 # executable
-add_library(xpjs SHARED ${SOURCES})
+add_library(xpjs MODULE ${SOURCES})
 
 
 target_link_libraries (xpjs dl pthread mozjs-24 libjsrdbg.a)
 
 set_target_properties(xpjs PROPERTIES LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -rdynamic -nodefaultlibs -undefined_warning -fPIC -fvisibility=hidden")
+set_target_properties(xpjs PROPERTIES OUTPUT_NAME ${XPJS_OS})
+set_target_properties(xpjs PROPERTIES PREFIX "")
+set_target_properties(xpjs PROPERTIES SUFFIX ".xpl")
 
+# install
+install(
+	TARGETS xpjs
+	DESTINATION ${INSTALL_DIR}
+	)
