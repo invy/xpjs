@@ -14,8 +14,9 @@ class Data {
 public:
     XPLMDataRef ref;
     XPLMDataTypeID typeId;
+	bool ro;
 public:
-    Data(const XPLMDataRef &ref, const XPLMDataTypeID& typeId) : ref(ref), typeId(typeId) { }
+    Data(const XPLMDataRef &ref, const XPLMDataTypeID& typeId, bool ro) : ref(ref), typeId(typeId), ro(ro) { }
 public:
     int& get(int &data) {
         data = XPLMGetDatai(ref);
@@ -106,12 +107,12 @@ public:
             return -1;
         bool ro = (XPLMCanWriteDataRef(ref) == true);
         auto type = XPLMGetDataRefTypes(ref);
-        dataRefs.push_back(Data(ref, type));
+        dataRefs.push_back(Data(ref, type, ro));
         auto refId = dataRefs.size()-1;
         trackingDRefs[drefName] = refId;
         return refId;
     }
-    int registerDataRef(const std::string& drefname) {
+    int registerDataRef(const std::string& ) {
         // not implemented
         return -1;
     }

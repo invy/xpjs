@@ -16,15 +16,18 @@ set(INSTALL_DIR ${CMAKE_INSTALL_PREFIX})
 
 
 # compiles options
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -std=c++11 -Wall -O2 -fPIC")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wextra -std=c++11 -Wall -O2 -fPIC")
+
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0  -Wextra -std=c++11 -Wall -fPIC")
 
 # Bring the headers
 include_directories(inc)
+include_directories(importer/inc)
 foreach (dir Widgets Wrappers XPLM)
-  include_directories ("${XPSDKDIR}/CHeaders/${dir}")
+  include_directories (SYSTEM "${XPSDKDIR}/CHeaders/${dir}")
 endforeach ()
-include_directories(${MOZJSDIR_INC})
-include_directories(${JSRDBGDIR_INC})
+include_directories(SYSTEM ${MOZJSDIR_INC})
+include_directories(SYSTEM ${JSRDBGDIR_INC})
 
 
 #link directories
@@ -35,7 +38,7 @@ add_definitions(-DAPL=0 -DIBM=0 -DLIN=1)
 
 
 # project files
-file(GLOB SOURCES "src/*.cpp")
+file(GLOB SOURCES "src/*.cpp" "importer/src/*.cpp")
 file(GLOB INCLUDES "inc/*.h")
 
 set(ALL_SRC ${SOURCES} ${INCLUDES})
@@ -46,7 +49,7 @@ SOURCE_GROUP(src FILES ${ALL_SRC})
 add_library(xpjs MODULE ${SOURCES})
 
 
-target_link_libraries (xpjs dl pthread mozjs-24 libjsrdbg.a)
+target_link_libraries (xpjs c dl pthread mozjs-24 libjsrdbg.a)
 
 set_target_properties(xpjs PROPERTIES LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -rdynamic -nodefaultlibs -undefined_warning -fPIC -fvisibility=hidden")
 set_target_properties(xpjs PROPERTIES OUTPUT_NAME ${XPJS_OS})
@@ -57,4 +60,4 @@ set_target_properties(xpjs PROPERTIES SUFFIX ".xpl")
 install(
 	TARGETS xpjs
 	DESTINATION ${INSTALL_DIR}
-	)
+)

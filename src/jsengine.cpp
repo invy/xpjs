@@ -9,6 +9,9 @@
 
 #include <XPLMUtilities.h>
 #include <XPLMProcessing.h>
+
+#include "importer.h"
+#include "jsapi-util.h"
 #include "jsfuncwrapper.h"
 #include "jsengine.h"
 
@@ -18,22 +21,25 @@
 JSEngine::JSEngine() :
     loader(*this)
 {
-    rt = JS_NewRuntime(64L * 1024 * 1024, JS_USE_HELPER_THREADS);
-    cx = JS_NewContext(rt, 8192);
-    ar = new JSAutoRequest(cx);
-    global = new JS::RootedObject(cx, JS_NewGlobalObject(cx, &global_class, nullptr));
-    ac = new JSAutoCompartment(cx, *global);
+    context.runtime = JS_NewRuntime(64L * 1024 * 1024, JS_USE_HELPER_THREADS);
 
+    context.context = JS_NewContext(context.runtime, 8192);
+    context.global = JS::RootedObject(context.context, JS_NewGlobalObject(context.context, &global_class, nullptr));
 
-    JS_SetNativeStackQuota(rt, 1024 * 1024);
-    JS_SetGCParameter(rt, JSGC_MAX_BYTES, 0xffffffff);
+    ac = new JSAutoCompartment(context.context, context.global);
 
-    JS_InitStandardClasses(cx, *global);
+	JS_SetNativeStackQuota(context.runtime, 1024 * 1024);
+    JS_SetGCParameter(context.runtime, JSGC_MAX_BYTES, 0xffffffff);
 
-    JS_DefineFunctions(cx, *global, js_mappedFunctions);
+    JS_InitStandardClasses(context.context, context.global);
 
-    JS_SetRuntimePrivate(rt, this);
-    JS_SetErrorReporter(cx, &JSEngine::dispatchError);
+    for (int i = 0; i < GJS_STRING_LAST; i++)
+        context.const_strings[i] = gjs_intern_string_to_id(context.context, gjs_const_strings[i]);
+	
+    JS_DefineFunctions(context.context, context.global, js_mappedFunctions);
+
+    JS_SetRuntimePrivate(context.runtime, this);
+    JS_SetErrorReporter(context.context, &JSEngine::dispatchError);
 
 }
 
@@ -56,13 +62,13 @@ bool JSEngine::InitDebugger() {
 
     this->dbg.reset(new JSR::JSRemoteDebugger( cfg ));
 
-    if( dbg->install(cx, "avionics-JS", dbgOptions) != JSR_ERROR_NO_ERROR ) {
+    if( dbg->install(context.context, "avionics-JS", dbgOptions) != JSR_ERROR_NO_ERROR ) {
         XPLMDebugString("Cannot install debugger.\n");
         return false;
     }
 
     if( dbg->start() != JSR_ERROR_NO_ERROR ) {
-        dbg->uninstall( cx );
+        dbg->uninstall( context.context );
         XPLMDebugString("Cannot start debugger.\n");
         return false;
     }
@@ -72,36 +78,37 @@ bool JSEngine::InitDebugger() {
 
 JSEngine::~JSEngine() {
     dbg->stop();
-    dbg->uninstall(cx);
+    dbg->uninstall(context.context);
 
-    delete global;
     delete ac;
-    delete ar;
 
-    JS_DestroyContext(cx);
-    JS_DestroyRuntime(rt);
+    JS_DestroyContext(context.context);
+    JS_DestroyRuntime(context.runtime);
     JS_ShutDown();
 }
 
 void JSEngine::callJsUpdate() {
-    JS::RootedValue rval(cx);
-    JS::AutoValueVector argv(cx);
+    JSAutoRequest ar(context.context);
+    JS::RootedValue rval(context.context);
+    JS::AutoValueVector argv(context.context);
     argv.resize(0);
-    JS_CallFunctionName(this->cx, *(this->global), "update", 0, argv.begin(), rval.address());
+    JS_CallFunctionName(this->context.context, JS::Rooted<JSObject*>(context.context, context.global), "update", 0, argv.begin(), rval.address());
 }
 
 void JSEngine::callJsOnEnable() {
-    JS::RootedValue rval(cx);
-    JS::AutoValueVector argv(cx);
+    JSAutoRequest ar(context.context);
+    JS::RootedValue rval(context.context);
+    JS::AutoValueVector argv(context.context);
     argv.resize(0);
-    JS_CallFunctionName(this->cx, *(this->global), "onEnable", 0, argv.begin(), rval.address());
+    JS_CallFunctionName(this->context.context, JS::Rooted<JSObject*>(context.context, context.global), "onEnable", 0, argv.begin(), rval.address());
 }
 
 void JSEngine::callJsOnDisable() {
-    JS::RootedValue rval(cx);
-    JS::AutoValueVector argv(cx);
+    JSAutoRequest ar(context.context);
+    JS::RootedValue rval(context.context);
+    JS::AutoValueVector argv(context.context);
     argv.resize(0);
-    JS_CallFunctionName(this->cx, *(this->global), "onDisable", 0, argv.begin(), rval.address());
+    JS_CallFunctionName(this->context.context, JS::Rooted<JSObject*>(context.context, context.global), "onDisable", 0, argv.begin(), rval.address());
 }
 
 
@@ -122,19 +129,39 @@ bool JSEngine::setup(const std::string scriptPath) {
     std::ifstream scriptFile(scriptFileName, std::ifstream::in);
     scriptContent.assign((std::istreambuf_iterator<char>(scriptFile)), (std::istreambuf_iterator<char>()));
     int lineno = 1;
-    JS::RootedValue rval(cx);
+    JS::RootedValue rval(context.context);
 
+    JS::CompartmentOptions options;
+    options.setVersion(JSVERSION_LATEST);
 
-    // Register newly created global object into the debugger,
+    JSAutoRequest ar(context.context);
+    JS_SetContextPrivate(context.context, &context);
+
+	// Register newly created global object into the debugger,
     // in order to make it debuggable.
-    if( dbg->addDebuggee( cx, *global ) != JSR_ERROR_NO_ERROR ) {
+    if( dbg->addDebuggee( context.context, JS::Rooted<JSObject*>(context.context, context.global) ) != JSR_ERROR_NO_ERROR ) {
         XPLMDebugString("Cannot add debuggee.\n");
         return false;
     }
 
+    std::vector<std::string> search_path;
+	search_path.push_back(scriptPath);
 
+    /* We create the global-to-runtime root importer with the
+     * passed-in search path. If someone else already created
+     * the root importer, this is a no-op.
+     */
+    if (!gjs_create_root_importer(context.context, search_path, true))
+        XPLMDebugString("Failed to create root importer\n");
 
-    bool ok = JS_EvaluateScript(cx, *global, scriptContent.c_str(), scriptContent.size(), this->scriptFileName.c_str(), lineno, rval.address());
+    /* Now copy the global root importer (which we just created,
+     * if it didn't exist) to our global object
+     */
+    if (!gjs_define_root_importer(context.context, context.global))
+        XPLMDebugString("Failed to point 'imports' property at root importer\n");
+
+    bool ok = contextEval(&context, this->scriptFileName, scriptContent);
+    
     if (!ok)
         return false;
     return true;
@@ -142,8 +169,11 @@ bool JSEngine::setup(const std::string scriptPath) {
 
 void JSEngine::onError(const std::string& message, JSErrorReport *report) {
     std::stringstream ss;
-    ss << "XPJS: [" << report->errorNumber << "] " << report->filename << ": "
-                    << report->lineno << ":" << report->column << "\n\t" << message << "\n"
+    ss << "XPJS: [" << report->errorNumber << "] "
+	                << ((report->filename != nullptr) ? 
+	                    report->filename : "") << ": "
+                    << report->lineno
+                    << ":" << report->column << "\n\t" << message << "\n"
                     << "\t\t" << "at:\t" << report->tokenptr << "\n";
     XPLMDebugString(ss.str().c_str());
 }
@@ -159,15 +189,4 @@ void JSEngine::dispatchError(JSContext* ctx, const char* message, JSErrorReport*
 
 std::string& JSEngine::getScript() {
     return this->scriptContent;
-}
-
-FlightLoopCallbackObject* JSEngine::addJSFlightLoopCallback(const std::string &callbackName) {
-    callbacks.push_back(FlightLoopCallbackObject(callbackName, this->cx, this->global));
-    return &callbacks.back();
-}
-
-void JSEngine::unregisterAllCallbacks() {
-    for(auto c : callbacks) {
-        XPLMUnregisterFlightLoopCallback((XPLMFlightLoop_f)&(c.callback), nullptr);
-    }
 }

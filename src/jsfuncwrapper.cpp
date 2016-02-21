@@ -5,7 +5,6 @@
 
 #include "jsengine.h"
 #include "xpdataaccess.h"
-#include "xpcallbacks.h"
 
 extern XPDataAccess g_xpdata;
 extern JSEngine* g_js;
@@ -27,9 +26,6 @@ JSFunctionSpec js_mappedFunctions[] = {
     JS_FN("set", set, 2, 0),
     JS_FN("getAt", getIdx, 2, 0),
     JS_FN("setAt", setIdx, 3, 0),
-    /* callback registration */
-    JS_FN("regusterFlightLoopCallback", registerFlightLoopCallback, 2, 0),
-    JS_FN("unregisterFlightLoopCallback", unregisterFlightLoopCallback, 1, 0),
     /* etc... */
     JS_FS_END
 };
@@ -197,24 +193,3 @@ JSBool setIdx(JSContext *, unsigned argc, jsval *vp) {
 
     return true;
 }
-
-JSBool registerFlightLoopCallback(JSContext *ctx, unsigned argc, jsval *vp) {
-    JS::CallArgs args = CallArgsFromVp(argc, vp);
-    if(argc < 2)
-        return false;
-    // signature: unsigned int registerFlightLoopCallback(callbackName, interval)
-    std::string callbackName = JS_EncodeString(ctx, args[0].toString());
-    auto interval = args[1].toDouble();
-
-    FlightLoopCallbackObject *p = ::g_js->addJSFlightLoopCallback(callbackName);
-
-    XPLMRegisterFlightLoopCallback ((XPLMFlightLoop_f)&(p->callback), interval, nullptr);
-
-    args.rval().setInt32(p->callbackId);
-    return true;
-}
-
-JSBool unregisterFlightLoopCallback(JSContext *, unsigned argc, jsval *vp) {
-
-}
-

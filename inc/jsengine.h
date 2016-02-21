@@ -9,9 +9,10 @@
 #include <jsapi.h>
 #include <jsdbgapi.h>
 
+#include "jsapi-util.h"
+
 #include "jsrdbg.h"
 
-#include "xpcallbacks.h"
 
 static JSClass global_class = {
     "global",
@@ -38,7 +39,7 @@ class JSEngine
 
         ~ScriptLoader() { }
 
-        int load( JSContext *cx, const std::string &path, std::string &script ) {
+        int load( JSContext*, const std::string &path, std::string &script ) {
             if( path == "avionics.js" ) {
                 script = engine.getScript();
                 return JSR_ERROR_NO_ERROR;
@@ -49,17 +50,12 @@ class JSEngine
     };
 
 private:
-    JSRuntime *rt;
-    JSContext *cx;
-    JSAutoRequest *ar;
-    JS::RootedObject *global;
-    JSAutoCompartment *ac;
+	GjsContext context;
+	JSAutoCompartment *ac;
     std::unique_ptr<JSR::JSRemoteDebugger> dbg;
     std::string scriptFileName;
     std::string scriptContent;
     ScriptLoader loader;
-public:
-    std::vector<FlightLoopCallbackObject> callbacks;
 public:
     bool InitDebugger();
     std::string& getScript();
@@ -70,8 +66,6 @@ public:
     void callJsOnEnable();
     void callJsOnDisable();
     void onError(const std::string& error, JSErrorReport *report);
-    FlightLoopCallbackObject* addJSFlightLoopCallback(const std::string &callbackName);
-    void unregisterAllCallbacks();
     static void dispatchError(JSContext* ctx, const char* message, JSErrorReport*);
 };
 
