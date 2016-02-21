@@ -70,8 +70,6 @@ define_meta_properties(JSContext  *context,
                        std::string module_name,
                        JSObject   *parent)
 {
-	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
-
 	bool parent_is_module;
 
     /* We define both __moduleName__ and __parentModule__ to null
@@ -124,8 +122,6 @@ import_directory(JSContext   *context,
                  const std::string &name,
                  std::vector<std::string> full_paths)
 {
-   	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
-
 	JSObject *importer;
 
     gjs_debug(GJS_DEBUG_IMPORTER,
@@ -149,7 +145,6 @@ define_import(JSContext  *context,
               JSObject   *module_obj,
               std::string &name)
 {
-   	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
     if (!JS_DefineProperty(context, obj,
                            name.c_str(), OBJECT_TO_JSVAL(module_obj),
                            NULL, NULL,
@@ -171,7 +166,6 @@ seal_import(JSContext  *context,
             JSObject   *obj,
             const std::string &name)
 {
-   	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
     JSBool found;
     unsigned attrs;
 
@@ -218,7 +212,6 @@ cancel_import(JSContext  *context,
               JSObject   *obj,
               const std::string &name)
 {
-   	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
     gjs_debug(GJS_DEBUG_IMPORTER,
               "Cleaning up from failed import of '%s'",
               name.c_str());
@@ -235,7 +228,6 @@ import_native_file(JSContext  *context,
                    JSObject   *obj,
                    std::string &name)
 {
-   	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
     JSObject *module_obj;
     JSBool retval = JS_FALSE;
 
@@ -270,7 +262,6 @@ import_native_file(JSContext  *context,
 static JSObject *
 create_module_object(JSContext *context)
 {
-   	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
     return JS_NewObject(context, NULL, NULL, NULL);
 }
 
@@ -280,7 +271,6 @@ import_file(JSContext  *context,
             const std::string &file,
             JSObject   *module_obj)
 {
-   	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
     jsval script_retval;
 
     JS::CompileOptions options(context);
@@ -308,7 +298,6 @@ load_module_init(JSContext  *context,
                  JSObject   *in_object,
                  std::string &full_path)
 {
-   	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
     JSObject *module_obj;
     JSBool found;
     jsid module_init_name;
@@ -344,7 +333,6 @@ load_module_elements(JSContext *context,
                      JSObject *in_object,
                      ImporterIterator *iter,
                      std::string init_path) {
-   	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
     JSObject *module_obj;
     JSObject *jsiter;
 
@@ -386,7 +374,6 @@ import_file_on_module(JSContext  *context,
                       std::string &name,
                       std::string &filePath)
 {
-   	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
     JSObject *module_obj;
     JSBool retval = JS_FALSE;
 
@@ -418,7 +405,6 @@ do_import(JSContext  *context,
           Importer   *priv,
           std::string &name)
 {
-   	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
     std::string filename;
     std::string full_path;
     std::string dirname;
@@ -582,7 +568,6 @@ do_import(JSContext  *context,
 static ImporterIterator *
 importer_iterator_new(void)
 {
-   	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
     ImporterIterator *iter = new ImporterIterator();
 
     iter->index = 0;
@@ -616,7 +601,6 @@ importer_new_enumerate(JSContext  *context,
                        JS::MutableHandleValue statep,
                        JS::MutableHandleId idp)
 {
-   	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
     ImporterIterator *iter;
 
     switch (enum_op) {
@@ -791,7 +775,6 @@ importer_new_resolve(JSContext *context,
                      unsigned flags,
                      JS::MutableHandleObject objp)
 {
-   	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
     Importer *priv;
     std::string name;
     JSBool ret = JS_TRUE;
@@ -831,7 +814,6 @@ gjs_importer_constructor(JSContext  *context,
                          unsigned    argc,
                          jsval      *vp)
 {
-   	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
     gjs_throw_abstract_constructor_error(context, vp);
     return JS_FALSE;
 }
@@ -840,7 +822,6 @@ static void
 importer_finalize(JSFreeOp *fop,
                   JSObject *obj)
 {
-   	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
     Importer *priv;
 
     priv = (Importer*) JS_GetPrivate(obj);
@@ -884,7 +865,6 @@ static JSObject*
 importer_new(JSContext *context,
              bool   is_root)
 {
-   	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
     JSObject *importer;
     Importer *priv;
     JSObject *global;
@@ -947,7 +927,6 @@ importer_new(JSContext *context,
 std::vector<std::string>
 gjs_get_search_path(void)
 {
-   	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
     std::vector<std::string> paths;
 
     if (gjs_search_path.size() == 0) {
@@ -969,7 +948,6 @@ gjs_create_importer(JSContext    *context,
                     bool      is_root,
                     JSObject     *in_object)
 {
-   	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
     JSObject *importer;
     std::vector<std::string> paths[2];
     std::vector<std::string> search_path;
@@ -1009,7 +987,6 @@ gjs_define_importer(JSContext    *context,
                     bool      add_standard_search_path)
 
 {
-   	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
     JSObject *importer;
 
     importer = gjs_create_importer(context, importer_name, initial_search_path, add_standard_search_path, false, in_object);
@@ -1035,7 +1012,6 @@ gjs_create_root_importer(JSContext   *context,
                          std::vector<std::string> &initial_search_path,
                          bool     add_standard_search_path)
 {
-   	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
     jsval importer;
 
     JS_BeginRequest(context);
@@ -1065,7 +1041,6 @@ gjs_define_root_importer_object(JSContext        *context,
                                 JS::HandleObject  in_object,
                                 JS::HandleObject  root_importer)
 {
-   	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
     JSBool success;
     jsid imports_name;
 
@@ -1094,7 +1069,6 @@ JSBool
 gjs_define_root_importer(JSContext   *context,
                          JSObject    *in_object)
 {
-   	gjs_debug(GJS_DEBUG_IMPORTER, __FUNCTION__);
     JS::RootedValue importer(JS_GetRuntime(context),
                              gjs_get_global_slot(context, GJS_GLOBAL_SLOT_IMPORTS));
     JS::RootedObject rooted_in_object(JS_GetRuntime(context),
