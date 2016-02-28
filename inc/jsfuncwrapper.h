@@ -12,7 +12,7 @@ extern JSBool getIdx(JSContext *cx, unsigned argc, jsval *vp);
 extern JSBool setIdx(JSContext *, unsigned argc, jsval *vp);
 extern JSBool registerFlightLoopCallback(JSContext *, unsigned argc, jsval *vp);
 extern JSBool unregisterFlightLoopCallback(JSContext *, unsigned argc, jsval *vp);
-
+extern JSBool scheduleFlightLoopCallback(JSContext*, unsigned int argc, jsval* vp);
 
 extern JSFunctionSpec js_mappedFunctions[];
 

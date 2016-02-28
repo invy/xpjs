@@ -13,6 +13,7 @@
 
 #include "jsrdbg.h"
 
+#include "xpjscallbacks.h"
 
 static JSClass global_class = {
     "global",
@@ -56,6 +57,7 @@ private:
     std::string scriptFileName;
     std::string scriptContent;
     ScriptLoader loader;
+	XPJSCallbacks callbacks;
 public:
     bool InitDebugger();
     std::string& getScript();
@@ -65,7 +67,9 @@ public:
     void callJsUpdate();
     void callJsOnEnable();
     void callJsOnDisable();
-    void onError(const std::string& error, JSErrorReport *report);
+	XPJSCallbacks& getCallbacks();
+public:
+	void onError(const std::string& error, JSErrorReport *report);
     static void dispatchError(JSContext* ctx, const char* message, JSErrorReport*);
 };
 

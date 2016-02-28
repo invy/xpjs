@@ -26,6 +26,10 @@ JSFunctionSpec js_mappedFunctions[] = {
     JS_FN("set", set, 2, 0),
     JS_FN("getAt", getIdx, 2, 0),
     JS_FN("setAt", setIdx, 3, 0),
+    /* callbacks */
+	JS_FN("regFLCallback", registerFlightLoopCallback, 2, 0),
+	JS_FN("unregFLCallback", unregisterFlightLoopCallback, 1, 0),
+	JS_FN("schedFLCallback", scheduleFlightLoopCallback, 3, 0),
     /* etc... */
     JS_FS_END
 };
@@ -192,4 +196,33 @@ JSBool setIdx(JSContext *, unsigned argc, jsval *vp) {
         return false;
 
     return true;
+}
+
+JSBool registerFlightLoopCallback(JSContext*, unsigned int argc, jsval* vp)
+{
+    JS::CallArgs args = CallArgsFromVp(argc, vp);
+    if(argc < 2)
+        return false;
+	if(args[0].isObject()) {
+		g_js->getCallbacks().registerFlightLoopCallback(reinterpret_cast<JSFunction*>(&args[0].toObject()), args[1].toDouble());
+		return true;
+	}
+	return false;
+}
+
+
+JSBool scheduleFlightLoopCallback(JSContext*, unsigned int argc, jsval* vp)
+{
+    JS::CallArgs args = CallArgsFromVp(argc, vp);
+    if(argc < 2)
+        return false;
+	if(args[0].isObject()) {
+		g_js->getCallbacks().registerFlightLoopCallback(reinterpret_cast<JSFunction*>(&args[0].toObject()), args[1].toDouble());
+		return true;
+	}
+	return false;
+}
+
+JSBool unregisterFlightLoopCallback(JSContext *, unsigned argc, jsval *vp) {
+	return false;
 }

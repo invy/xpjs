@@ -19,7 +19,8 @@
 
 
 JSEngine::JSEngine() :
-    loader(*this)
+    loader(*this),
+    callbacks(context)
 {
     context.runtime = JS_NewRuntime(64L * 1024 * 1024, JS_USE_HELPER_THREADS);
 
@@ -165,6 +166,10 @@ bool JSEngine::setup(const std::string scriptPath) {
     if (!ok)
         return false;
     return true;
+}
+
+XPJSCallbacks& JSEngine::getCallbacks() {
+	return this->callbacks;
 }
 
 void JSEngine::onError(const std::string& message, JSErrorReport *report) {
