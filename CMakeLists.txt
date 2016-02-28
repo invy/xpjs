@@ -35,6 +35,7 @@ link_directories(${JSRDBGDIR_LIB})
 
 #add definitions
 add_definitions(-DAPL=0 -DIBM=0 -DLIN=1)
+add_definitions(-DXPLM210)
 
 
 # project files
