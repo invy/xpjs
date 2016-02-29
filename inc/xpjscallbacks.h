@@ -56,23 +56,27 @@ public:
 	uint64_t registerFlightLoopCallback(JSFunction *obj, float interval);
 	void unregisterFlightLoopCallback(const uint64_t callbackId);
 
-	static float jsFlightLoopCallback(float elapsedSinceLastCall,
-                 float elapsedTimeSinceLastFlightLoop,  int counter,
-                 void *refcon)
+	static float jsFlightLoopCallback(
+								float elapsedSinceLastCall,
+								float elapsedTimeSinceLastFlightLoop,
+								int counter,
+								void *refcon)
 	{
-		auto jscallback = reinterpret_cast<XPJSCallback*>(refcon);
+		auto jscallback = static_cast<XPJSCallback*>(refcon);
 	    JSAutoRequest ar(jscallback->getContext().context);
 		JS::RootedValue rval(jscallback->getContext().context);
 		JS::AutoValueVector argv(jscallback->getContext().context);
 		argv.resize(3);
-		argv[0] = JS::NumberValue<float>(elapsedSinceLastCall);
-		argv[1] = JS::NumberValue<float>(elapsedTimeSinceLastFlightLoop);
+		argv[0] = JS::DoubleValue(elapsedSinceLastCall);
+		argv[1] = JS::DoubleValue(elapsedTimeSinceLastFlightLoop);
 		argv[2] = JS::NumberValue<int>(counter);
 		
 		JS_CallFunction(jscallback->getContext().context,
 						JS::Rooted<JSObject*>(jscallback->getContext().context,
 						jscallback->getContext().global), 
-						jscallback->getJSCallback(), 0, argv.begin(), rval.address());
+						jscallback->getJSCallback(),
+						argv.length(), argv.begin(),
+						rval.address());
 		return rval.toDouble();
 	}
 };
